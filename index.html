@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>同高貼齊</title>
+</head>
+<body>
+  <!-- 這個檔案是 App 的 SDK 進入點，會在白板背景載入（headless）。
+       它唯一的工作：註冊「點 App 圖示 → 打開面板」。 -->
+  <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+  <script>
+    miro.board.ui.on('icon:click', async () => {
+      await miro.board.ui.openPanel({ url: 'panel.html' });
+    });
+  </script>
+</body>
+</html>

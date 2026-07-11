@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>同高貼齊</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+      margin: 0; padding: 16px; font-size: 14px; line-height: 1.5;
+    }
+    h1 { font-size: 15px; margin: 0 0 4px; }
+    p.hint { margin: 0 0 16px; opacity: .65; font-size: 12px; }
+    .row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    label { flex: 1; }
+    input[type="number"] {
+      width: 72px; padding: 6px 8px; border-radius: 6px;
+      border: 1px solid rgba(128,128,128,.4); background: transparent;
+      color: inherit; font-size: 14px;
+    }
+    button {
+      width: 100%; padding: 11px 14px; border: 0; border-radius: 8px;
+      background: #4262ff; color: #fff; font-size: 14px; font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #2d4bec; }
+    button:disabled { opacity: .5; cursor: default; }
+    .status { margin-top: 14px; font-size: 12px; min-height: 18px; }
+    .status.ok  { color: #2e9e4f; }
+    .status.err { color: #e0483d; }
+    details { margin-top: 18px; font-size: 12px; opacity: .8; }
+    summary { cursor: pointer; }
+    details ul { margin: 8px 0 0; padding-left: 18px; }
+  </style>
+</head>
+<body>
+  <h1>同高貼齊</h1>
+  <p class="hint">複選多張圖 → 按下按鈕：全部統一成「中位數高度」，依畫面位置由左到右、底端對齊、貼齊相鄰。</p>
+
+  <div class="row">
+    <label for="gap">圖與圖間距 (px)</label>
+    <input id="gap" type="number" value="0" min="0" step="1" />
+  </div>
+
+  <button id="run">同高 + 貼齊</button>
+  <div id="status" class="status"></div>
+
+  <details>
+    <summary>其他選項說明</summary>
+    <ul>
+      <li>只會影響「圖片」，其他物件（文字、便利貼、框）會被忽略。</li>
+      <li>圖片等比例縮放，畫質不會被拉扯變形。</li>
+      <li>錨點＝最左邊那張圖，它幾乎不動，其他往它貼齊。</li>
+    </ul>
+  </details>
+
+  <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
