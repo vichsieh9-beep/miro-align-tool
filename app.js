@@ -7,7 +7,7 @@
  *   水平間距 = 面板可調，預設 0（貼齊相鄰）
  */
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const $btn = document.getElementById('run');
 const $gap = document.getElementById('gap');
 const $status = document.getElementById('status');
@@ -70,10 +70,11 @@ async function run() {
     let cursor = startLeft;
     for (const it of items) {
       const scale = targetH / it.h;
-      const newW = it.w * scale;
+      const newW = it.w * scale;   // Miro 會自動等比例得到這個寬，這裡自己算來定位
 
-      it.img.height = targetH;   // 先設高（圖片會等比例帶動寬）
-      it.img.width = newW;       // 再對齊寬（同 scale，值一致）
+      // Miro 圖片一次只能改寬或高其中一個（另一個等比例自動帶）。
+      // 只設高，寬會自動變成 newW，畫質不變形。
+      it.img.height = targetH;
       it.img.x = cursor + newW / 2;
       it.img.y = bottomY - targetH / 2;   // 底端對齊
 
