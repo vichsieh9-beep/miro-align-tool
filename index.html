@@ -10,7 +10,8 @@
   <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
   <script>
     miro.board.ui.on('icon:click', async () => {
-      await miro.board.ui.openPanel({ url: 'panel.html' });
+      // 每次打開都加時間戳，避免 GitHub Pages 快取讓你看到舊版面板。
+      await miro.board.ui.openPanel({ url: 'panel.html?cb=' + Date.now() });
     });
   </script>
 </body>
