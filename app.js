@@ -7,14 +7,21 @@
  *   水平間距 = 面板可調，預設 0（貼齊相鄰）
  */
 
+const VERSION = 'v3';
 const $btn = document.getElementById('run');
 const $gap = document.getElementById('gap');
 const $status = document.getElementById('status');
 
 function setStatus(msg, kind) {
+  if (!$status) return;
   $status.textContent = msg;
   $status.className = 'status' + (kind ? ' ' + kind : '');
 }
+
+// 任何未捕捉錯誤都顯示在面板上，方便診斷
+window.addEventListener('error', (e) => setStatus('JS 錯誤：' + e.message, 'err'));
+window.addEventListener('unhandledrejection', (e) =>
+  setStatus('Promise 錯誤：' + (e.reason && e.reason.message ? e.reason.message : e.reason), 'err'));
 
 function median(nums) {
   const s = [...nums].sort((a, b) => a - b);
@@ -23,21 +30,27 @@ function median(nums) {
 }
 
 async function run() {
+  setStatus('開始…（' + VERSION + '）');
   $btn.disabled = true;
-  setStatus('');
 
   try {
-    const gap = Math.max(0, Number($gap.value) || 0);
-
-    const selection = await miro.board.getSelection();
-    const images = selection.filter((i) => i.type === 'image');
-
-    if (images.length < 2) {
-      setStatus('請先複選 2 張以上的圖片。', 'err');
+    if (typeof miro === 'undefined' || !miro.board) {
+      setStatus('找不到 Miro SDK（miro 未定義）', 'err');
       return;
     }
 
-    // 先擷取原始幾何（Miro 的 x/y 是物件中心點）
+    const gap = Math.max(0, Number($gap.value) || 0);
+
+    const selection = await miro.board.getSelection();
+    setStatus('選取 ' + selection.length + ' 個物件…');
+
+    const images = selection.filter((i) => i.type === 'image');
+
+    if (images.length < 2) {
+      setStatus('請先複選 2 張以上的圖片（目前圖片 ' + images.length + '）。', 'err');
+      return;
+    }
+
     const items = images.map((img) => ({
       img,
       x: img.x,
@@ -46,12 +59,10 @@ async function run() {
       h: img.height,
     }));
 
-    // 依畫面位置由左到右排序（用中心 x）
     items.sort((a, b) => a.x - b.x);
 
     const targetH = median(items.map((it) => it.h));
 
-    // 錨點＝最左那張：保留它現在的左緣與底緣，其他往它貼齊
     const anchor = items[0];
     const startLeft = anchor.x - anchor.w / 2;
     const bottomY = anchor.y + anchor.h / 2;
@@ -61,8 +72,8 @@ async function run() {
       const scale = targetH / it.h;
       const newW = it.w * scale;
 
-      it.img.width = newW;      // 等比例：寬高同時 × scale，畫質不變形
-      it.img.height = targetH;
+      it.img.height = targetH;   // 先設高（圖片會等比例帶動寬）
+      it.img.width = newW;       // 再對齊寬（同 scale，值一致）
       it.img.x = cursor + newW / 2;
       it.img.y = bottomY - targetH / 2;   // 底端對齊
 
@@ -70,13 +81,17 @@ async function run() {
       cursor += newW + gap;
     }
 
-    setStatus(`完成：${items.length} 張圖已統一為 ${Math.round(targetH)}px 高並貼齊。`, 'ok');
+    setStatus('完成：' + items.length + ' 張圖已統一為 ' + Math.round(targetH) + 'px 高並貼齊。', 'ok');
   } catch (e) {
-    console.error(e);
     setStatus('執行失敗：' + (e && e.message ? e.message : String(e)), 'err');
   } finally {
     $btn.disabled = false;
   }
 }
 
-$btn.addEventListener('click', run);
+if ($btn) {
+  $btn.addEventListener('click', run);
+  setStatus('已載入 ' + VERSION + '，請複選圖片後按按鈕。', 'ok');
+} else {
+  setStatus('找不到按鈕元素（id=run）', 'err');
+}
