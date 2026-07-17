@@ -44,28 +44,25 @@
     }
   });
 
-  // icon 只吃官方預定義名稱，但文件沒列清單——由候選逐一嘗試，全滅也不影響其他入口
-  const iconCandidates = ['align-bottom', 'align-horizontal', 'layout-grid', 'grid', 'chat-two'];
-  for (const icon of iconCandidates) {
-    try {
-      await miro.board.experimental.action.register({
-        event: 'same-height-align',
-        ui: {
-          label: { en: '同高貼齊' },
-          icon: icon,
-          description: { en: '統一成中位數高度、底端對齊、貼齊相鄰' },
-        },
-        scope: 'local',
-        predicate: { type: 'image' },
-        contexts: { item: {} },
-        selection: 'multi',
-      });
-      break;
-    } catch (e) {
-      if (icon === iconCandidates[iconCandidates.length - 1]) {
-        console.warn('同高貼齊：custom action 註冊失敗（右鍵選單不可用）', e);
-      }
-    }
+  // 註冊右鍵選單動作。icon 用官方文件示範過的 chat-two（自訂名單沒有公開清單，
+  // 亂試會因同 event 重複註冊被擋）；欄位保持最小合法集合。
+  // 失敗時直接彈紅色通知顯示原因（headless 看不到 console，V 才有得回報）。
+  try {
+    await miro.board.experimental.action.register({
+      event: 'same-height-align',
+      ui: {
+        label: { en: '同高貼齊' },
+        icon: 'chat-two',
+        description: '統一成中位數高度、底端對齊、貼齊相鄰',
+      },
+      scope: 'local',
+      predicate: { type: 'image' },
+      contexts: { item: {} },
+    });
+  } catch (e) {
+    await miro.board.notifications.showError(
+      '同高貼齊：右鍵選單註冊失敗——' + (e && e.message ? e.message : String(e))
+    );
   }
 
   // ── 入口 2：工具列圖示一鍵直跑 ──────────────────────────────────────
