@@ -1,10 +1,7 @@
 /* 同高貼齊 — Miro Web SDK 面板邏輯
  *
- * 行為（已與需求確認）：
- *   目標高度 = 選取圖片高度的「中位數」
- *   垂直對齊 = 底端對齊
- *   排列順序 = 依目前畫面位置（由左到右）
- *   水平間距 = 面板可調，預設 0（貼齊相鄰）
+ * 幾何邏輯在 align-core.js（與 index.html 一鍵直跑共用）；
+ * 這裡只剩面板 UI：讀間距、跑核心、顯示狀態。
  */
 
 const $btn = document.getElementById('run');
@@ -21,12 +18,6 @@ function setStatus(msg, kind) {
 window.addEventListener('error', (e) => setStatus('發生錯誤：' + e.message, 'err'));
 window.addEventListener('unhandledrejection', (e) =>
   setStatus('發生錯誤：' + (e.reason && e.reason.message ? e.reason.message : e.reason), 'err'));
-
-function median(nums) {
-  const s = [...nums].sort((a, b) => a - b);
-  const mid = Math.floor(s.length / 2);
-  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
-}
 
 async function run() {
   setStatus('處理中…');
@@ -48,41 +39,9 @@ async function run() {
       return;
     }
 
-    // 先擷取原始幾何（Miro 的 x/y 是物件中心點）
-    const items = images.map((img) => ({
-      img,
-      x: img.x,
-      y: img.y,
-      w: img.width,
-      h: img.height,
-    }));
+    const r = await alignImagesSameHeight(images, gap);
 
-    // 依畫面位置由左到右排序（用中心 x）
-    items.sort((a, b) => a.x - b.x);
-
-    const targetH = median(items.map((it) => it.h));
-
-    // 錨點＝最左那張：保留它現在的左緣與底緣，其他往它貼齊
-    const anchor = items[0];
-    const startLeft = anchor.x - anchor.w / 2;
-    const bottomY = anchor.y + anchor.h / 2;
-
-    let cursor = startLeft;
-    for (const it of items) {
-      const scale = targetH / it.h;
-      const newW = it.w * scale;   // Miro 會等比例得到這個寬，這裡自己算來定位
-
-      // Miro 圖片一次只能改寬或高其中一個（另一個等比例自動帶）。
-      // 只設高，寬會自動變成 newW，畫質不變形。
-      it.img.height = targetH;
-      it.img.x = cursor + newW / 2;
-      it.img.y = bottomY - targetH / 2;   // 底端對齊
-
-      await it.img.sync();
-      cursor += newW + gap;
-    }
-
-    setStatus('完成：' + items.length + ' 張圖已統一為 ' + Math.round(targetH) + 'px 高並貼齊。', 'ok');
+    setStatus('完成：' + r.count + ' 張圖已統一為 ' + Math.round(r.targetH) + 'px 高並貼齊。', 'ok');
   } catch (e) {
     setStatus('執行失敗：' + (e && e.message ? e.message : String(e)), 'err');
   } finally {

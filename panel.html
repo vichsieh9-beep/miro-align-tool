@@ -57,11 +57,16 @@
   </details>
 
   <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
-  <!-- 用時間戳載入 app.js，永遠抓最新版（避開 GitHub Pages 快取）。 -->
+  <!-- 用時間戳載入，永遠抓最新版（避開 GitHub Pages 快取）；核心先載、UI 後載。 -->
   <script>
-    var s = document.createElement('script');
-    s.src = 'app.js?cb=' + Date.now();
-    document.body.appendChild(s);
+    var core = document.createElement('script');
+    core.src = 'align-core.js?cb=' + Date.now();
+    core.onload = function () {
+      var s = document.createElement('script');
+      s.src = 'app.js?cb=' + Date.now();
+      document.body.appendChild(s);
+    };
+    document.body.appendChild(core);
   </script>
 </body>
 </html>

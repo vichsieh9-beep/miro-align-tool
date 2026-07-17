@@ -5,14 +5,15 @@
   <title>同高貼齊</title>
 </head>
 <body>
-  <!-- 這個檔案是 App 的 SDK 進入點，會在白板背景載入（headless）。
-       它唯一的工作：註冊「點 App 圖示 → 打開面板」。 -->
+  <!-- App 的 SDK 進入點（白板背景 headless 載入）。
+       這個檔案是「薄載入器」：只負責把 headless.js 用時間戳載進來——
+       GitHub Pages 快取只吃得住這個殼，邏輯（headless.js / align-core.js）
+       每次開白板都抓最新版。以後改行為不用再去 Miro 後台 bump App URL 的 ?v。 -->
   <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
   <script>
-    miro.board.ui.on('icon:click', async () => {
-      // 每次打開都加時間戳，避免 GitHub Pages 快取讓你看到舊版面板。
-      await miro.board.ui.openPanel({ url: 'panel.html?cb=' + Date.now() });
-    });
+    var s = document.createElement('script');
+    s.src = 'headless.js?cb=' + Date.now();
+    document.body.appendChild(s);
   </script>
 </body>
 </html>
