@@ -41,7 +41,7 @@ async function run() {
 
     const r = await alignImagesSameHeight(images, gap);
 
-    setStatus('完成：' + r.count + ' 張圖已統一為 ' + Math.round(r.targetH) + 'px 高並貼齊。', 'ok');
+    setStatus('完成：' + r.count + ' 張圖已統一為 ' + Math.round(r.targetH) + 'px 高並貼齊，共 ' + r.rows + ' 排。', 'ok');
   } catch (e) {
     setStatus('執行失敗：' + (e && e.message ? e.message : String(e)), 'err');
   } finally {

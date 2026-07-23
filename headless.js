@@ -23,7 +23,7 @@
     }
     const r = await alignImagesSameHeight(images, 0);
     await miro.board.notifications.showInfo(
-      '同高貼齊完成：' + r.count + ' 張圖已統一為 ' + Math.round(r.targetH) + 'px 高。'
+      '同高貼齊完成：' + r.count + ' 張圖已統一為 ' + Math.round(r.targetH) + 'px 高，共 ' + r.rows + ' 排。'
     );
   }
 
@@ -53,7 +53,7 @@
       ui: {
         label: { en: '同高貼齊' },
         icon: 'chat-two',
-        description: '統一成中位數高度、底端對齊、貼齊相鄰',
+        description: '固定 1024px 高、底端對齊，每排最多 8 張、由左到右貼齊換排',
       },
       scope: 'local',
       predicate: { type: 'image' },
