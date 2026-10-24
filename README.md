@@ -6,7 +6,7 @@
 
 `headless.js` 另外開了兩個函式給「Add to My Miro」擴充功能注入呼叫：
 - `window.sameHeightPlaceItem(id, left, top, height)`：借 Web SDK 縮放＋擺位。實測（2026-10-24）代貼的原生預覽卡在 SDK 是 `embed`、寬高唯讀，縮不了，只會擺位置。
-- `window.sameHeightCreatePreview(url, left, top, height)`（試做）：用 `createPreview` 建一張寬高可改的 `preview` 卡，擴充功能的「測試加網址」用它比對長相。
+- `window.sameHeightGetViewport()`／`sameHeightSetZoom(zoom)`／`sameHeightSetViewport(rect)`（試做）：原生卡貼上的當下大小跟著縮放走，擴充功能貼上前先調縮放讓卡片一貼就是圖片高度，貼完調回。（`createPreview` 建的 preview 卡縮得動但沒有圖，V 10-24 否決，已拿掉。）
 
 ---
 

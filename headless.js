@@ -5,7 +5,7 @@
  *   2. 工具列圖示：選取 ≥2 張圖片／連結卡時點圖示 → 直接執行；選取不足才開面板
  * 兩者都固定間距 0；要調間距走面板（什麼都不選再點圖示）。
  *
- * 另外對「Add to My Miro」擴充功能開兩個口：window.sameHeightPlaceItem、window.sameHeightCreatePreview（見下）。
+ * 另外開幾個 window.sameHeight* 函式給「Add to My Miro」擴充功能注入呼叫（見下）。
  */
 
 (async () => {
@@ -28,15 +28,19 @@
     return { type: sized.type, width: sized.width, height: sized.height };
   };
 
-  // 試做（2026-10-24）：代貼的原生卡在 SDK 是 embed、大小唯讀；改用 createPreview 建的
-  // preview 卡官方定義寬高可改。擴充功能的「測試加網址」會呼叫這裡建一張來比長相。
-  window.sameHeightCreatePreview = async (url, left, top, targetH) => {
-    const created = await miro.board.createPreview({ url, x: left, y: top });
-    const sized = await resizeToHeight(created, targetH);
-    sized.x = left + sized.width / 2;
-    sized.y = top + sized.height / 2;
-    await sized.sync();
-    return { id: sized.id, type: sized.type, width: sized.width, height: sized.height };
+  // 試做（2026-10-24）：代貼的原生卡貼上後大小改不了，但貼的當下大小跟著板子縮放走。
+  // 擴充功能會先讀現在的畫面、把縮放調到剛好讓卡片一貼就是圖片高度，貼完再把畫面調回來。
+  window.sameHeightGetViewport = async () => ({
+    viewport: await miro.board.viewport.get(),
+    zoom: await miro.board.viewport.getZoom(),
+  });
+  window.sameHeightSetZoom = async (zoom) => {
+    await miro.board.viewport.setZoom(zoom);
+    return { zoom: await miro.board.viewport.getZoom() };
+  };
+  window.sameHeightSetViewport = async (viewport) => {
+    await miro.board.viewport.set({ viewport, animationDurationInMs: 0 });
+    return { ok: true };
   };
 
   async function runOnImages(images) {
