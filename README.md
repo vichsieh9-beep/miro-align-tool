@@ -4,7 +4,9 @@
 
 只影響圖片與連結卡（貼網址產生的預覽卡 `preview`、影片等嵌入卡 `embed`），其他物件（文字、便利貼、框）會被略過；等比例縮放不變形。Miro 不讓改大小的卡片只排位置。
 
-`headless.js` 另外開了 `window.sameHeightPlaceItem(id, left, top, height)` 給「Add to My Miro」擴充功能：它代貼連結後 REST API 改不了原生預覽卡大小，會注入本 App 的 iframe 借 Web SDK 縮放。
+`headless.js` 另外開了兩個函式給「Add to My Miro」擴充功能注入呼叫：
+- `window.sameHeightPlaceItem(id, left, top, height)`：借 Web SDK 縮放＋擺位。實測（2026-10-24）代貼的原生預覽卡在 SDK 是 `embed`、寬高唯讀，縮不了，只會擺位置。
+- `window.sameHeightCreatePreview(url, left, top, height)`（試做）：用 `createPreview` 建一張寬高可改的 `preview` 卡，擴充功能的「測試加網址」用它比對長相。
 
 ---
 

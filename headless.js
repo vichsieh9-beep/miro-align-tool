@@ -5,7 +5,7 @@
  *   2. 工具列圖示：選取 ≥2 張圖片／連結卡時點圖示 → 直接執行；選取不足才開面板
  * 兩者都固定間距 0；要調間距走面板（什麼都不選再點圖示）。
  *
- * 另外對「Add to My Miro」擴充功能開一個口：window.sameHeightPlaceItem（見下）。
+ * 另外對「Add to My Miro」擴充功能開兩個口：window.sameHeightPlaceItem、window.sameHeightCreatePreview（見下）。
  */
 
 (async () => {
@@ -26,6 +26,17 @@
     sized.y = top + sized.height / 2;
     await sized.sync();
     return { type: sized.type, width: sized.width, height: sized.height };
+  };
+
+  // 試做（2026-10-24）：代貼的原生卡在 SDK 是 embed、大小唯讀；改用 createPreview 建的
+  // preview 卡官方定義寬高可改。擴充功能的「測試加網址」會呼叫這裡建一張來比長相。
+  window.sameHeightCreatePreview = async (url, left, top, targetH) => {
+    const created = await miro.board.createPreview({ url, x: left, y: top });
+    const sized = await resizeToHeight(created, targetH);
+    sized.x = left + sized.width / 2;
+    sized.y = top + sized.height / 2;
+    await sized.sync();
+    return { id: sized.id, type: sized.type, width: sized.width, height: sized.height };
   };
 
   async function runOnImages(images) {
