@@ -1,9 +1,11 @@
 /* 同高貼齊 — 背景（headless）邏輯，由 index.html 以時間戳載入
  *
  * 兩個免面板入口：
- *   1. 右鍵選單：選取 ≥2 張圖片 → 右鍵（或「⋯」）→「同高貼齊」→ 直接執行
- *   2. 工具列圖示：選取 ≥2 張圖片時點圖示 → 直接執行；選取不足才開面板
+ *   1. 右鍵選單：選取 ≥2 張圖片／連結卡 → 右鍵（或「⋯」）→「同高貼齊」→ 直接執行
+ *   2. 工具列圖示：選取 ≥2 張圖片／連結卡時點圖示 → 直接執行；選取不足才開面板
  * 兩者都固定間距 0；要調間距走面板（什麼都不選再點圖示）。
+ *
+ * 另外對「Add to My Miro」擴充功能開一個口：window.sameHeightPlaceItem（見下）。
  */
 
 (async () => {
@@ -16,14 +18,25 @@
     document.body.appendChild(s);
   });
 
+  // 給「Add to My Miro」擴充功能用：它代貼連結後，Miro 原生預覽卡的大小 REST API 改不了，
+  // 擴充功能會注入本 App 的 iframe 呼叫這裡，用 Web SDK 縮放到圖片高度並把左上角擺到 (left, top)。
+  window.sameHeightPlaceItem = async (id, left, top, targetH) => {
+    const sized = await resizeToHeight(await miro.board.getById(id), targetH);
+    sized.x = left + sized.width / 2;
+    sized.y = top + sized.height / 2;
+    await sized.sync();
+    return { type: sized.type, width: sized.width, height: sized.height };
+  };
+
   async function runOnImages(images) {
     if (images.length < 2) {
-      await miro.board.notifications.showError('同高貼齊：請先複選 2 張以上的圖片。');
+      await miro.board.notifications.showError('同高貼齊：請先複選 2 張以上的圖片或連結卡。');
       return;
     }
     const r = await alignImagesSameHeight(images, 0);
     await miro.board.notifications.showInfo(
-      '同高貼齊完成：' + r.count + ' 張圖已統一為 ' + Math.round(r.targetH) + 'px 高，共 ' + r.rows + ' 排。'
+      '同高貼齊完成：' + r.count + ' 張已統一為 ' + Math.round(r.targetH) + 'px 高，共 ' + r.rows + ' 排。'
+        + (r.unsized ? '（' + r.unsized + ' 張 Miro 不讓改大小，只排位置）' : '')
     );
   }
 
@@ -38,7 +51,7 @@
     try {
       // 文件說 payload＝選取項陣列；部分版本包成 {items}，兩種都接
       const items = Array.isArray(payload) ? payload : (payload && payload.items) || [];
-      await runOnImages(items.filter((i) => i.type === 'image'));
+      await runOnImages(items.filter(isAlignable));
     } catch (e) {
       await notifyError(e);
     }
@@ -53,10 +66,10 @@
       ui: {
         label: { en: '同高貼齊' },
         icon: 'chat-two',
-        description: '固定 1024px 高、底端對齊，每排最多 8 張、由左到右貼齊換排',
+        description: '圖片與連結卡固定 1024px 高、底端對齊，每排最多 8 張、由左到右貼齊換排',
       },
       scope: 'local',
-      predicate: { type: 'image' },
+      predicate: { type: { $in: ALIGN_TYPES } },
       contexts: { item: {} },
     });
   } catch (e) {
@@ -69,10 +82,10 @@
   miro.board.ui.on('icon:click', async () => {
     try {
       const selection = await miro.board.getSelection();
-      const images = selection.filter((i) => i.type === 'image');
+      const images = selection.filter(isAlignable);
 
       if (images.length < 2) {
-        // 沒選夠圖＝當作要看說明/調間距，走原本的面板
+        // 沒選夠＝當作要看說明/調間距，走原本的面板
         await miro.board.ui.openPanel({ url: 'panel.html?cb=' + Date.now() });
         return;
       }

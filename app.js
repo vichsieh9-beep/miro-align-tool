@@ -32,16 +32,17 @@ async function run() {
     const gap = Math.max(0, Number($gap.value) || 0);
 
     const selection = await miro.board.getSelection();
-    const images = selection.filter((i) => i.type === 'image');
+    const images = selection.filter(isAlignable);
 
     if (images.length < 2) {
-      setStatus('請先複選 2 張以上的圖片。', 'err');
+      setStatus('請先複選 2 張以上的圖片或連結卡。', 'err');
       return;
     }
 
     const r = await alignImagesSameHeight(images, gap);
 
-    setStatus('完成：' + r.count + ' 張圖已統一為 ' + Math.round(r.targetH) + 'px 高並貼齊，共 ' + r.rows + ' 排。', 'ok');
+    setStatus('完成：' + r.count + ' 張已統一為 ' + Math.round(r.targetH) + 'px 高並貼齊，共 ' + r.rows + ' 排。'
+      + (r.unsized ? '（' + r.unsized + ' 張 Miro 不讓改大小，只排位置）' : ''), 'ok');
   } catch (e) {
     setStatus('執行失敗：' + (e && e.message ? e.message : String(e)), 'err');
   } finally {
